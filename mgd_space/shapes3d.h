@@ -11,6 +11,7 @@ namespace mgd
 		Point3 p;
 		Versor3 d;
 
+		Ray() {};
 		Ray(Point3 _p, Vector3 _d) : p(_p), d(_d.normalized()){	}
 	};
 
@@ -26,26 +27,30 @@ namespace mgd
 	{
 		Versor3 n;
 		Point3 p;
+
+		Plane(Point3 _p, Versor3 _n) : n(_n), p(_p) {}
 	};
 
 	//Raycasts
 
-	bool hit(Ray ray, Plane plane, Point3& hitPos)
+	bool rayCast(Ray ray, Plane plane, Point3& hitPos, Versor3 &hitNorm, float &distMax)
 	{
 		Scalar dn = dot(ray.d, plane.n);
 		if (dn == 0)
 			return false;
 		Scalar k = dot(ray.p - plane.p, plane.n) / dn; 
-		if (k < 0)
-			return false;
+		if (k < 0) return false;
+		if (k > distMax) return false;
+		distMax = k;
 		hitPos = ray.p + k * ray.d;
+		hitNorm = plane.n;
 		return true;
 	}
-
-	bool hit(Ray ray, Sphere sphere, Point3 &hitPos)
+	
+	bool rayCast(Ray ray, Sphere sphere, Point3 &hitPos, Versor3 &hitNorm, float &distMax)
 	{
 		//hitpos is (ray.p + k*ray.d)
-		//with a * k^2 + b * k + c = 0
+		//for some k such that a * k^2 + b * k + c = 0
 		Scalar a = 1.f;
 		Scalar b = 2 * dot(ray.d, ray.p - sphere.c);
 		Scalar c = (ray.p - sphere.c).squaredNorm() - sphere.r * sphere.r;
@@ -54,9 +59,11 @@ namespace mgd
 		if (delta < 0)
 			return false;
 		Scalar k = (-b - sqrt(delta)) / (2 * a);
-		if (k < 0)
-			return false;
+		if (k < 0) return false;
+		if (k > distMax) return false;
+		distMax = k;
 		hitPos = ray.p + k * ray.d;
+		hitNorm = (hitPos - sphere.c).normalized();
 		return true;
 	}
 

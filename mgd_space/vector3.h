@@ -69,7 +69,7 @@ namespace mgd
 
 		//norm stuff
 		Scalar squaredNorm() const { return x * x + y * y + z * z; }
-		Scalar norm() const { return sqrt(squaredNorm()); }
+		Scalar norm() const { return std::sqrt(squaredNorm()); }
 		Vector3 normalized() const { return *this / norm(); }
 		void normalize() { *this /= norm(); }
 	};
@@ -93,14 +93,14 @@ namespace mgd
 	}
 
 	//Support functions
-	inline bool areEqual(Scalar a, Scalar b) { return abs(a - b) < TOLERANCE; }
+	inline bool areEqual(Scalar a, Scalar b) { return std::abs(a - b) < TOLERANCE; }
 
 	inline bool areEqual(const Vector3 &a, const Vector3 &b) 
 	{
 		return areEqual(a.x, b.x) && areEqual(a.y, b.y) && areEqual(a.z, b.z);
 	}	
 
-	inline bool isZero(Scalar a) { return abs(a) < TOLERANCE; }
+	inline bool isZero(Scalar a) { return std::abs(a) < TOLERANCE; }
 
 	inline bool isZero(Vector3 a) { return isZero(a.x) && isZero(a.y) && isZero(a.z); }
 
