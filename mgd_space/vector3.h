@@ -1,6 +1,9 @@
 #pragma once
 
-#include <assert.h>
+#include <cassert>
+#include <cmath>
+
+#define TOLERANCE 1e-5;
 
 namespace mgd
 {
@@ -61,11 +64,26 @@ namespace mgd
 				assert(0); return dummy;
 			}
 		}
+
+		bool operator == (const Vector3 &v) { return (x == v.x) && (y == v.y) && (z == v.z); }
+
+		//norm stuff
+		Scalar squaredNorm() const { return x * x + y * y + z * z; }
+		Scalar norm() const { return sqrt(squaredNorm()); }
+		Vector3 normalized() const { return *this / norm(); }
+		void normalize() { *this /= norm(); }
 	};
 
+	using Point3 = Vector3; //Useful if we'll want to make a separate Point3 struct later
+	using Versor3 = Vector3; //Useful if we'll want to make a separate Versor3 struct later
+
+	//Necessary because vector scaling is commutative
+	inline Vector3 operator * (Scalar k, const Vector3 &a) { return a * k; }
+
+	//Vector operations
 	inline Scalar dot(const Vector3& v, const Vector3& w) { return v.x * w.x + v.y * w.y + v.z * w.z; }
 
-	inline Vector3 cross(const Vector3& v, const Vector3& w) 
+	inline Vector3 cross(const Vector3& v, const Vector3& w)
 	{
 		return Vector3(
 			(v.y * w.z) - (w.y * v.z),
@@ -73,5 +91,17 @@ namespace mgd
 			(v.x * w.y) - (w.x * v.y)
 		);
 	}
+
+	//Support functions
+	inline bool areEqual(Scalar a, Scalar b) { return abs(a - b) < TOLERANCE; }
+
+	inline bool areEqual(const Vector3 &a, const Vector3 &b) 
+	{
+		return areEqual(a.x, b.x) && areEqual(a.y, b.y) && areEqual(a.z, b.z);
+	}	
+
+	inline bool isZero(Scalar a) { return abs(a) < TOLERANCE; }
+
+	inline bool isZero(Vector3 a) { return isZero(a.x) && isZero(a.y) && isZero(a.z); }
 
 }; //End of namespace mgd
