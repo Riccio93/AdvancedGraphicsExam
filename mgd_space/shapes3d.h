@@ -38,7 +38,7 @@ namespace mgd
 		Scalar dn = dot(ray.d, plane.n);
 		if (dn == 0)
 			return false;
-		Scalar k = dot(ray.p - plane.p, plane.n) / dn; 
+		Scalar k = dot(plane.p - ray.p, plane.n) / dn; 
 		if (k < 0) return false;
 		if (k > distMax) return false;
 		distMax = k;

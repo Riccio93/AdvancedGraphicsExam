@@ -2,6 +2,8 @@
 #include "vector3.h"
 #include "shapes3d.h"
 #include "camera.h"
+#include "quaternion.h"
+#include "transform.h"
 
 using namespace mgd;
 
@@ -41,13 +43,74 @@ void unitTestRaycasts()
 {
 	Ray r(Point3(0, 0, 0), Vector3(1, 0, 0));
 	Sphere s(Point3(5, 0, 0), 3);
-
 	Point3 hitPos;
 	Versor3 hitNorm;
 	Scalar distMax = 100000;
 	bool isHit = rayCast(r, s, hitPos, hitNorm, distMax);
+
 	assert(isHit);
 	assert(areEqual(hitPos, Point3(2, 0, 0)));
+}
+
+void unitTestRaycastPlane()
+{
+	Ray r(Point3(0, 0, 0), Vector3(1, 0, 0));
+	Plane p(Point3(10, 0, 0), Vector3(-1, 0, 0));
+	Point3 hitPos;
+	Versor3 hitNorm;
+	Scalar distMax = 100000;
+	bool isHit = rayCast(r, p, hitPos, hitNorm, distMax);
+
+	assert(isHit);
+	assert(areEqual(hitPos, Point3(10, 0, 0)));
+}
+
+void unitTestQuaternions()
+{
+	{
+		Quaternion rot = Quaternion::fromAngleAxis(180.f, Vector3(0, 1, 0));
+		Point3 p(0, 0, 1);
+		assert(areEqual(rot.apply(p), Point3(0, 0, -1)));
+	}
+	{
+		Quaternion rot = Quaternion::fromAngleAxis(90.f, Vector3(0, 1, 0));
+		Point3 p(3, 5, 6);
+		assert(areEqual(rot.apply(p), Point3(6, 5, -3)));
+	}
+	{
+		Quaternion rot = Quaternion::fromAngleAxis(30.f, Vector3(1, 1, 3));
+		Point3 p(3, 5, 6), q = p;
+		for(int k=0; k<12; k++) q = rot.apply(q);
+		assert(areEqual(p, q));
+	}
+	{
+		Quaternion rot = Quaternion::fromAngleAxis(20.f, Vector3(4, 3, 1));
+		Quaternion q = Quaternion::identity();
+		for (int k = 0; k < 18; k++) q = q * rot;
+		assert(areEquivalent(q, Quaternion::identity()));
+		//assert(areEqual(q, Quaternion::identity())); //This doesn't work, but it's ok because q and -q are the same rotation
+	}
+}
+
+void unitTestTransformation()
+{
+	//Testing inverse
+	Transform t;
+	t.rotate = Quaternion::fromAngleAxis(43.4f, Vector3(1, -3, -2));
+	t.translate = Vector3(1, 3, 4);
+	t.scale = 5.f;
+	Point3 p(4, 10, -13);
+	Point3 q = t.transformPoint(p);
+	Point3 r = t.inverse().transformPoint(q);
+
+	assert(areEqual(p, r));
+
+	//Testing invert
+	Transform ti = t;
+	ti.invert();
+	r = ti.transformPoint(q);
+
+	assert(areEqual(p, r));
 }
 
 //ASCII art: convert an intensity value [0,1] into a sequence of two chars
@@ -55,13 +118,20 @@ const char* intensityToCstr(Scalar intensity)
 {
 	switch(int (std::round(intensity*5)))
 	{
-		case 0: return " "; //darkest
+		case 0: return "  "; //darkest
 		case 1: return " \'";
 		case 2: return " +";
 		case 3: return " *";
 		case 4: return " #";
 		default: case 5: return "##"; //lightest
 	}
+}
+
+float currentTime()
+{
+	static float now = .0f;
+	now += .005f;
+	return now;
 }
 
 const char* lighting(Versor3 normal)
@@ -75,9 +145,13 @@ const char* lighting(Versor3 normal)
 
 void rayCastingSphere()
 {
+	float time = currentTime();
 	Camera c(2.f, 30, 30);
 	Sphere sphere(Point3(0, 0, 6), 2);
-	Plane plane(Point3(0, .5f, 0), Versor3(0, 1, 0));
+	Sphere sphere1(Point3(2.f * std::cos(time), 1, 6 + 2.f * std::sin(time)), 1);
+	Plane plane(Point3(0, -1.5f, 0), Versor3(0, 1, 0));
+
+	std::string screenBuffer; //a string to get ready and print all at once
 
 	for(int y = 0; y < c.pixelDimY; y++)
 	{
@@ -87,11 +161,16 @@ void rayCastingSphere()
 			Versor3 hitNorm;
 			Scalar distMax = 100000.f;
 			rayCast(c.primaryRay(x, y), sphere, hitPos, hitNorm, distMax);
+			rayCast(c.primaryRay(x, y), sphere1, hitPos, hitNorm, distMax);
 			rayCast(c.primaryRay(x, y), plane, hitPos, hitNorm, distMax);
-			std::cout << lighting(hitNorm);
+
+			screenBuffer += lighting(hitNorm);
+			//std::cout << lighting(hitNorm);
 		}
-		std::cout << std::endl;
+		//std::cout << std::endl;
+		screenBuffer += '\n';
 	}
+	std::cout << screenBuffer;
 }
 
 int main()
@@ -99,5 +178,9 @@ int main()
 	unitTestProducts();
 	unitTestLinearOps();
 	unitTestRaycasts();
-	rayCastingSphere();
+	unitTestRaycastPlane();
+	unitTestQuaternions();
+	unitTestTransformation();
+	//while(1)
+		//rayCastingSphere();
 }
