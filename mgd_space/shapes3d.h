@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vector3.h"
+#include "transform.h"
 
 namespace mgd
 {
@@ -30,6 +31,13 @@ namespace mgd
 
 		Plane(Point3 _p, Versor3 _n) : n(_n), p(_p) {}
 	};
+
+	//Transformations
+
+	Sphere apply(const Transform &a, const Sphere &s)
+	{
+		return Sphere(a.transformPoint(s.c), a.transformScalar(s.r));
+	}
 
 	//Raycasts
 

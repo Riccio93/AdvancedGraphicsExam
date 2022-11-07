@@ -4,6 +4,7 @@
 #include "camera.h"
 #include "quaternion.h"
 #include "transform.h"
+#include "scene.h"
 
 using namespace mgd;
 
@@ -111,20 +112,15 @@ void unitTestTransformation()
 	r = ti.transformPoint(q);
 
 	assert(areEqual(p, r));
-}
 
-//ASCII art: convert an intensity value [0,1] into a sequence of two chars
-const char* intensityToCstr(Scalar intensity)
-{
-	switch(int (std::round(intensity*5)))
-	{
-		case 0: return "  "; //darkest
-		case 1: return " \'";
-		case 2: return " +";
-		case 3: return " *";
-		case 4: return " #";
-		default: case 5: return "##"; //lightest
-	}
+	//Testing composition
+	Transform tA;
+	tA.rotate = Quaternion::fromAngleAxis(-13.f, Vector3(13, 4, 0));
+	tA.translate = Vector3(0, -1, 1);
+	tA.scale = .23f;
+	Transform tB = t;
+
+	assert(areEqual((tA * tB).transformPoint(p), tA.transformPoint(tB.transformPoint(p))));
 }
 
 float currentTime()
@@ -132,45 +128,6 @@ float currentTime()
 	static float now = .0f;
 	now += .005f;
 	return now;
-}
-
-const char* lighting(Versor3 normal)
-{
-	//lambertian lighting (dot prod between normal and light's direction, max when dot = 1 (most similar, fully in light)
-	const Versor3 lightDir = Versor3(1, 2, -2).normalized(); 
-	Scalar diffuse = dot(normal, lightDir);
-	if (diffuse < 0) diffuse = 0;
-	return intensityToCstr(diffuse);
-}
-
-void rayCastingSphere()
-{
-	float time = currentTime();
-	Camera c(2.f, 30, 30);
-	Sphere sphere(Point3(0, 0, 6), 2);
-	Sphere sphere1(Point3(2.f * std::cos(time), 1, 6 + 2.f * std::sin(time)), 1);
-	Plane plane(Point3(0, -1.5f, 0), Versor3(0, 1, 0));
-
-	std::string screenBuffer; //a string to get ready and print all at once
-
-	for(int y = 0; y < c.pixelDimY; y++)
-	{
-		for(int x = 0; x < c.pixelDimX; x++)
-		{
-			Point3 hitPos;
-			Versor3 hitNorm;
-			Scalar distMax = 100000.f;
-			rayCast(c.primaryRay(x, y), sphere, hitPos, hitNorm, distMax);
-			rayCast(c.primaryRay(x, y), sphere1, hitPos, hitNorm, distMax);
-			rayCast(c.primaryRay(x, y), plane, hitPos, hitNorm, distMax);
-
-			screenBuffer += lighting(hitNorm);
-			//std::cout << lighting(hitNorm);
-		}
-		//std::cout << std::endl;
-		screenBuffer += '\n';
-	}
-	std::cout << screenBuffer;
 }
 
 int main()
@@ -181,6 +138,8 @@ int main()
 	unitTestRaycastPlane();
 	unitTestQuaternions();
 	unitTestTransformation();
-	//while(1)
-		//rayCastingSphere();
+
+	Scene s;
+	s.populate(30);
+	rayCasting(s.toWorld());
 }

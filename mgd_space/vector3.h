@@ -9,6 +9,11 @@ namespace mgd
 {
 	using Scalar = float;
 
+	inline Scalar randomBetween(Scalar min, Scalar max) //RNG
+	{
+		return min + (std::rand() % 1000) / Scalar(1000) * (max - min);
+	}
+
 	struct Vector3
 	{
 		Scalar x, y, z;
@@ -66,6 +71,11 @@ namespace mgd
 		}
 
 		bool operator == (const Vector3 &v) { return (x == v.x) && (y == v.y) && (z == v.z); }
+
+		static Vector3 random(Scalar range)
+		{
+			return Vector3(randomBetween(-range, range), randomBetween(-range, range), randomBetween(-range, range));
+		}
 
 		//norm stuff
 		Scalar squaredNorm() const { return x * x + y * y + z * z; }

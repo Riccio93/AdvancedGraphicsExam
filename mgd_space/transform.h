@@ -30,6 +30,8 @@ namespace mgd
 			return rotate.apply(p);
 		}
 
+		Scalar transformScalar(Scalar p) const { return p * scale; }
+
 		void invert()
 		{
 			scale = 1 / scale;
