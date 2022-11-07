@@ -1,4 +1,5 @@
 #include <iostream>
+#include <conio.h>
 #include "vector3.h"
 #include "shapes3d.h"
 #include "camera.h"
@@ -130,7 +131,7 @@ float currentTime()
 	return now;
 }
 
-int main()
+void runUnitTests()
 {
 	unitTestProducts();
 	unitTestLinearOps();
@@ -138,8 +139,51 @@ int main()
 	unitTestRaycastPlane();
 	unitTestQuaternions();
 	unitTestTransformation();
+}
+
+void inputHandling(const Scene &s, GameObj* currentGameObj, const std::vector<GameObj*> &objVec, float stepLength, bool isFirstPerson)
+{
+	Vector3 translationToApply;
+
+	char input = _getch(); //Gets the character pressed without the need to press ENTER
+
+	switch(input)
+	{
+	case 'w':
+		translationToApply = currentGameObj->transform.forwardDir() * stepLength;
+		break;
+	case 's':
+		translationToApply = -currentGameObj->transform.forwardDir() * stepLength;
+		break;
+	case 'a':
+		break;
+	case 'd':
+		break;
+	}
+
+	currentGameObj->move(translationToApply);
+
+	rayCasting(s.toWorld());	
+
+	std::cout << currentGameObj->transform.translate.x << ' '
+		<< currentGameObj->transform.translate.y << ' '
+		<< currentGameObj->transform.translate.z << std::endl;
+}
+
+int main()
+{
+	//runUnitTests();	
+
+	bool isFirstPerson = false;
+	float stepLength = 10.f;
 
 	Scene s;
-	s.populate(30);
+	std::vector<GameObj*> objVec = s.populate(1);
+	GameObj* currentCharacter = objVec[0];
+
 	rayCasting(s.toWorld());
+	while(1)
+	{
+		inputHandling(s, currentCharacter, objVec, stepLength, isFirstPerson);
+	}	
 }

@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <ctime>
 
 #define TOLERANCE 1e-5;
 
@@ -11,6 +12,8 @@ namespace mgd
 
 	inline Scalar randomBetween(Scalar min, Scalar max) //RNG
 	{
+		//TODO: Replace with a true random???
+		//std::srand(time(NULL));
 		return min + (std::rand() % 1000) / Scalar(1000) * (max - min);
 	}
 

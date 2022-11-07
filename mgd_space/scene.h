@@ -5,53 +5,38 @@
 #include "transform.h"
 #include "shapes3d.h"
 #include "camera.h"
+#include "gameObj.h"
 
 namespace mgd
 {
-
-	class GameObj
-	{
-
-	public:
-
-		Transform transform;
-
-		//Insert here content's description (mesh, collider, etc. (Everything in local space!))
-		//For now all objects are spheres with "noses"
-
-		Sphere body, nose;
-		GameObj() : 
-			transform(Transform()), 
-			body(Vector3(0, 0, 0), 1.f), 
-			nose(Vector3(0, 1.f, .3f), .7f) { }
-	};
-
 	class Scene
 	{
 
 	public:
 
-		std::vector<GameObj> obj; //A set of gameobj (each with its own transform)
+		std::vector<GameObj*> obj; //A set of gameobj (each with its own transform)
 
-		void populate(int n)
+		std::vector<GameObj*> populate(int n)
 		{
 			for(int i=0; i<n; i++)
 			{
-				GameObj someoneNew;
-				someoneNew.transform.translate = Vector3::random(14) + Vector3(0,0,15);
-				someoneNew.transform.translate.y = 0;
-				obj.push_back(someoneNew);
+				GameObj* newObj = new GameObj();
+				//newObj.transform.translate = Vector3::random(10) + Vector3(0,0,10);
+				newObj->transform.translate = Vector3(0, 0, 5);
+				//newObj->transform.translate.y = 0;
+				obj.push_back(newObj);
 			}
+			return obj;
 		}
 
 		//Makes a vector of spheres in world space
-		std::vector<Sphere> toWorld() const
+		std::vector<GameObj*> toWorld() const
 		{
-			std::vector<Sphere> res;
-			for(const GameObj &g : obj)
+			std::vector<GameObj*> res;
+			for(GameObj* g : obj)
 			{
-				res.push_back(apply(g.transform, g.nose));
-				res.push_back(apply(g.transform, g.body));
+				//res.push_back(apply(g.transform, g.nose));
+				res.push_back(apply(g->transform, g->body));
 			}
 			return res;
 		}
@@ -65,8 +50,16 @@ namespace mgd
 			//Quale sfera ruota? Ci sarà una variablie currentPlayer, che è un elemento dell'array e ogni
 			//volta che mi muovo cambio la trasformazione di currentplayer.
 			//Con il tasto spazio passo dalla third person mode (fuori da tutto) alla first person mode,
-			//assegnando la sua trasformazione al metodo toview (ha come camera la trasformazione associata al'oggetto
-			//i-esimo
+			//assegnando la sua trasformazione al method toview (ha come camera la trasformazione associata al'oggetto
+			//i-esimo.
+			//Coi tasti da 0 a 9 si cambia personaggio
+
+			/*std::vector<Sphere> res;
+			for(const GameObj &g : obj)
+			{
+				res.push_back(apply(camera.inverse(), apply(g.transform, g.body)));
+			}
+			return res;*/
 		}
 	};
 
@@ -98,7 +91,7 @@ namespace mgd
 
 	void rayCasting(const std::vector<Sphere> &sphereVector)
 	{
-		Camera c(2.f, 30, 30);
+		Camera c(2.f, 60, 60);
 		Plane plane(Point3(0, -1.5f, 0), Versor3(0, 1, 0));
 
 		std::string screenBuffer; //a string to get ready and print all at once
@@ -111,21 +104,15 @@ namespace mgd
 				Versor3 hitNorm;
 				Scalar distMax = 1000.f;
 
+				rayCast(c.primaryRay(x, y), plane, hitPos, hitNorm, distMax); //Floor raycast
 				for(const Sphere &s : sphereVector)
 				{
-					rayCast(c.primaryRay(x, y), s, hitPos, hitNorm, distMax);
+					rayCast(c.primaryRay(x, y), s, hitPos, hitNorm, distMax); //Spheres raycast
 				}
-
-				//rayCast(c.primaryRay(x, y), plane, hitPos, hitNorm, distMax);
-
 				screenBuffer += lighting(hitNorm);
-				//std::cout << lighting(hitNorm);
-			}
-			//std::cout << std::endl;
+			}			
 			screenBuffer += '\n';
 		}
 		std::cout << screenBuffer;
 	}
-
-
 } //End of namespace mgd

@@ -48,6 +48,11 @@ namespace mgd
 			return t;
 		}
 
+		Vector3 forwardDir() const
+		{
+			return rotate.apply(Vector3(0, 0, 1));
+		}
+
 	};
 
 	//b first, then a
