@@ -10,6 +10,7 @@
 
 using namespace mgd;
 
+#pragma region UnitTests
 void examplesOfSyntax()
 {
 	Vector3 v(0, 2, 3);
@@ -135,6 +136,8 @@ void runUnitTests()
 	unitTestTransformation();
 }
 
+#pragma endregion
+
 float currentTime()
 {
 	static float now = .0f;
@@ -142,24 +145,28 @@ float currentTime()
 	return now;
 }
 
-void printInstructions(bool isFirstPerson, GameObj* currentGameObj)
+void printInstructions(bool isFirstPerson, GameObj* currentGameObj, int& currentObjectIndex)
 {
 	std::cout << "CURRENT MODE: " << (isFirstPerson ? "FIRST PERSON" : "THIRD PERSON") << std::endl
-		<< "BUTTONS: W FORWARD, S BACKWARDS, A TURN ANTI-CLOCKWISE, D TURN CLOCKWISE\n"
-		<< "CURRENT COORDINATES: " 
-		<< currentGameObj->transform.translate.x << ' '
-		<< currentGameObj->transform.translate.y << ' '
-		<< currentGameObj->transform.translate.z << std::endl;
-	std::cout << currentGameObj;
+		<< "BUTTONS: WASD + TG FOR MOVEMENT, SPACE SWITCH MODE, 0-9 SWITCH SELECTED OBJECT\n"
+		<< "CURRENT SELECTED OBJECT: " << currentObjectIndex
+		<< " WITH POSITION: ("
+		<< currentGameObj->transform.translate.x << ", "
+		<< currentGameObj->transform.translate.y << ", "
+		<< currentGameObj->transform.translate.z << "), ROTATION: ("
+		<< currentGameObj->transform.rotate.im.x << ", "
+		<< currentGameObj->transform.rotate.im.y << ", "
+		<< currentGameObj->transform.rotate.im.z << ", "
+		<< currentGameObj->transform.rotate.re << "), SCALE: " << currentGameObj->transform.scale;
 }
 
-void printOnScreen(Scene s, GameObj* currentGameObj, bool isFirstPerson)
+void printOnScreen(Scene s, GameObj* currentGameObj, bool isFirstPerson, int& currentObjectIndex)
 {
 	isFirstPerson ? rayCasting(s.toView(currentGameObj->getTransform())) : rayCasting(s.toWorld());
-	printInstructions(isFirstPerson, currentGameObj);
+	printInstructions(isFirstPerson, currentGameObj, currentObjectIndex);
 }
 
-void inputHandling(const Scene &s, GameObj*& currentGameObj, const std::vector<GameObj*> &objVec, Scalar stepLength, Scalar rotationAngle, bool &isFirstPerson)
+void inputHandling(const Scene &s, GameObj*& currentGameObj, const std::vector<GameObj*>& objVec, Scalar stepLength, Scalar rotationAngle, bool& isFirstPerson, int& currentObjectIndex)
 {
 	Vector3 translationToApply;
 	Quaternion rotationToApply = Quaternion::identity();
@@ -170,41 +177,54 @@ void inputHandling(const Scene &s, GameObj*& currentGameObj, const std::vector<G
 	{
 		input -= '0';
 		currentGameObj = (objVec[input]);
+		currentObjectIndex = input;
 	}
 	else
 	{
 		switch (input)
 		{
+		//translation
 		case 'w':
 			translationToApply = currentGameObj->transform.forwardDir() * stepLength;
 			break;
 		case 's':
 			translationToApply = -currentGameObj->transform.forwardDir() * stepLength;
 			break;
+		case 't':
+			translationToApply = currentGameObj->transform.upDir() * stepLength / 5.f;
+			break;
+		case 'g':
+			translationToApply = -currentGameObj->transform.upDir() * stepLength / 5.f;
+			break;
+		//rotation
 		case 'a':
 			rotationToApply = Quaternion::fromAngleAxis(-rotationAngle, Vector3::up());
 			break;
 		case 'd':
 			rotationToApply = Quaternion::fromAngleAxis(rotationAngle, Vector3::up());
 			break;
+		//other
 		case 32: //SPACE
 			isFirstPerson = !isFirstPerson;
 			break;
 		case 'q':
 			exit(0); //Closes the console
 			break;
+		default:
+			break;
 		}
 		currentGameObj->move(translationToApply);
 		currentGameObj->rotate(rotationToApply);
 	}	
-	printOnScreen(s, currentGameObj, isFirstPerson);
+	printOnScreen(s, currentGameObj, isFirstPerson, currentObjectIndex);
 }
 
 int main()
 {
 	bool isFirstPerson = false;
-	Scalar stepLength = 2.5f;
-	Scalar rotationAngle = 15.f;
+	Scalar stepLength = 3.f;
+	Scalar rotationAngle = 20.f;
+	int currentObjectIndex = 0;
 
 	std::srand((unsigned int)time(NULL)); //Initializes the random seed
 
@@ -213,12 +233,12 @@ int main()
 
 	Scene s;
 	std::vector<GameObj*> objVec = s.populate(10);
-	GameObj* currentCharacter = objVec[0];
+	GameObj* currentCharacter = objVec[currentObjectIndex]; // 0 at start
 
-	printOnScreen(s, currentCharacter, isFirstPerson);
+	printOnScreen(s, currentCharacter, isFirstPerson, currentObjectIndex);
 
 	while(1)
 	{
-		inputHandling(s, currentCharacter, objVec, stepLength, rotationAngle,isFirstPerson);
+		inputHandling(s, currentCharacter, objVec, stepLength, rotationAngle,isFirstPerson, currentObjectIndex);
 	}	
 }

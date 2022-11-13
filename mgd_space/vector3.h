@@ -78,7 +78,7 @@ namespace mgd
 
 		static Vector3 random(Scalar range)
 		{
-			return Vector3(randomBetween(-range, range), randomBetween(-range, range), randomBetween(-range, range));
+			return Vector3(randomBetween(-range, range), randomBetween(-range/10.f, range/10.f), randomBetween(-range, range));
 		}
 
 		//norm stuff

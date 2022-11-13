@@ -25,16 +25,15 @@ namespace mgd
 					newObj->transform.translate = Vector3(0, 0, 10);
 				else
 				{
-					newObj->transform.translate = Vector3::random(25);
-					newObj->transform.translate.y = 0;
-					newObj->scale(.5f + (std::rand() % 1000) / Scalar(1000) * (5.f - .5f));
+					newObj->transform.translate = Vector3::random(25); //The y is divided by 10 inside the method
+					newObj->scale(.75f + (std::rand() % 1000) / Scalar(1000) * (7.f - .5f)); //Scale is in interval [0.75, 7]
 				}
 				obj.push_back(newObj);
 			}
 			return obj;
 		}
 
-		//Makes a vector of spheres in world space
+		//Local to world coordinates
 		std::vector<Sphere> toWorld() const
 		{
 			std::vector<Sphere> res;
@@ -46,6 +45,7 @@ namespace mgd
 			return res;
 		}
 
+		//Local to view coordinates
 		std::vector<Sphere> toView(Transform camera) const
 		{
 			std::vector<Sphere> res;
@@ -56,24 +56,6 @@ namespace mgd
 				res.push_back(apply(camera.inverse(), current));
 			}
 			return res;
-
-			//Trasforma ogni sfera con la sua trasformazione cumulata con l'inversa della camera, per
-			//portarlo in spazio vista.
-			//Ripetere il rendering ad ogni key press (con una readchar), con wasd controllo la camera (a e d la
-			//sfera ruota).
-			//Quale sfera ruota? Ci sarà una variablie currentPlayer, che è un elemento dell'array e ogni
-			//volta che mi muovo cambio la trasformazione di currentplayer.
-			//Con il tasto spazio passo dalla third person mode (fuori da tutto) alla first person mode,
-			//assegnando la sua trasformazione al method toview (ha come camera la trasformazione associata al'oggetto
-			//i-esimo.
-			//Coi tasti da 0 a 9 si cambia personaggio
-
-			/*std::vector<Sphere> res;
-			for(const GameObj &g : obj)
-			{
-				res.push_back(apply(camera.inverse(), apply(g.transform, g.body)));
-			}
-			return res;*/
 		}
 	};
 
@@ -105,7 +87,7 @@ namespace mgd
 
 	void rayCasting(const std::vector<Sphere> &sphereVector)
 	{
-		Camera c(2.f, 60, 60);
+		Camera c(2.f, 50, 50);
 		Plane plane(Point3(0, -1.5f, 0), Versor3(0, 1, 0));
 
 		std::string screenBuffer; //a string to get ready and print all at once

@@ -48,11 +48,8 @@ namespace mgd
 			return t;
 		}
 
-		Vector3 forwardDir() const
-		{
-			return rotate.apply(Vector3(0, 0, 1));
-		}
-
+		Vector3 forwardDir() const { return rotate.apply(Vector3(0, 0, 1));	}
+		Vector3 upDir() const { return rotate.apply(Vector3(0, 1, 0)); }
 	};
 
 	//b first, then a
@@ -64,7 +61,5 @@ namespace mgd
 		t.translate = a.transformVector(b.translate) + a.translate;
 		return t;
 	}
-
-
 } //end of namespace mgd
 
