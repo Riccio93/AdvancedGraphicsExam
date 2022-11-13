@@ -41,7 +41,7 @@ namespace mgd
 
 	//Raycasts
 
-	bool rayCast(Ray ray, Plane plane, Point3& hitPos, Versor3 &hitNorm, float &distMax)
+	bool rayCast(Ray ray, Plane plane, Point3& hitPos, Versor3 &hitNorm, Scalar &distMax)
 	{
 		Scalar dn = dot(ray.d, plane.n);
 		if (dn == 0)
@@ -55,7 +55,7 @@ namespace mgd
 		return true;
 	}
 	
-	bool rayCast(Ray ray, Sphere sphere, Point3 &hitPos, Versor3 &hitNorm, float &distMax)
+	bool rayCast(Ray ray, Sphere sphere, Point3 &hitPos, Versor3 &hitNorm, Scalar &distMax)
 	{
 		//hitpos is (ray.p + k*ray.d)
 		//for some k such that a * k^2 + b * k + c = 0

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <conio.h>
+#include <windows.h>
 #include "vector3.h"
 #include "shapes3d.h"
 #include "camera.h"
@@ -124,13 +125,6 @@ void unitTestTransformation()
 	assert(areEqual((tA * tB).transformPoint(p), tA.transformPoint(tB.transformPoint(p))));
 }
 
-float currentTime()
-{
-	static float now = .0f;
-	now += .005f;
-	return now;
-}
-
 void runUnitTests()
 {
 	unitTestProducts();
@@ -141,49 +135,90 @@ void runUnitTests()
 	unitTestTransformation();
 }
 
-void inputHandling(const Scene &s, GameObj* currentGameObj, const std::vector<GameObj*> &objVec, float stepLength, bool isFirstPerson)
+float currentTime()
+{
+	static float now = .0f;
+	now += .005f;
+	return now;
+}
+
+void printInstructions(bool isFirstPerson, GameObj* currentGameObj)
+{
+	std::cout << "CURRENT MODE: " << (isFirstPerson ? "FIRST PERSON" : "THIRD PERSON") << std::endl
+		<< "BUTTONS: W FORWARD, S BACKWARDS, A TURN ANTI-CLOCKWISE, D TURN CLOCKWISE\n"
+		<< "CURRENT COORDINATES: " 
+		<< currentGameObj->transform.translate.x << ' '
+		<< currentGameObj->transform.translate.y << ' '
+		<< currentGameObj->transform.translate.z << std::endl;
+	std::cout << currentGameObj;
+}
+
+void printOnScreen(Scene s, GameObj* currentGameObj, bool isFirstPerson)
+{
+	isFirstPerson ? rayCasting(s.toView(currentGameObj->getTransform())) : rayCasting(s.toWorld());
+	printInstructions(isFirstPerson, currentGameObj);
+}
+
+void inputHandling(const Scene &s, GameObj*& currentGameObj, const std::vector<GameObj*> &objVec, Scalar stepLength, Scalar rotationAngle, bool &isFirstPerson)
 {
 	Vector3 translationToApply;
+	Quaternion rotationToApply = Quaternion::identity();
 
 	char input = _getch(); //Gets the character pressed without the need to press ENTER
 
-	switch(input)
+	if(input >= '0' && input <= '9')
 	{
-	case 'w':
-		translationToApply = currentGameObj->transform.forwardDir() * stepLength;
-		break;
-	case 's':
-		translationToApply = -currentGameObj->transform.forwardDir() * stepLength;
-		break;
-	case 'a':
-		break;
-	case 'd':
-		break;
+		input -= '0';
+		currentGameObj = (objVec[input]);
 	}
-
-	currentGameObj->move(translationToApply);
-
-	rayCasting(s.toWorld());	
-
-	std::cout << currentGameObj->transform.translate.x << ' '
-		<< currentGameObj->transform.translate.y << ' '
-		<< currentGameObj->transform.translate.z << std::endl;
+	else
+	{
+		switch (input)
+		{
+		case 'w':
+			translationToApply = currentGameObj->transform.forwardDir() * stepLength;
+			break;
+		case 's':
+			translationToApply = -currentGameObj->transform.forwardDir() * stepLength;
+			break;
+		case 'a':
+			rotationToApply = Quaternion::fromAngleAxis(-rotationAngle, Vector3::up());
+			break;
+		case 'd':
+			rotationToApply = Quaternion::fromAngleAxis(rotationAngle, Vector3::up());
+			break;
+		case 32: //SPACE
+			isFirstPerson = !isFirstPerson;
+			break;
+		case 'q':
+			exit(0); //Closes the console
+			break;
+		}
+		currentGameObj->move(translationToApply);
+		currentGameObj->rotate(rotationToApply);
+	}	
+	printOnScreen(s, currentGameObj, isFirstPerson);
 }
 
 int main()
 {
-	//runUnitTests();	
-
 	bool isFirstPerson = false;
-	float stepLength = 10.f;
+	Scalar stepLength = 2.5f;
+	Scalar rotationAngle = 15.f;
+
+	std::srand((unsigned int)time(NULL)); //Initializes the random seed
+
+	HWND console = GetConsoleWindow();
+	ShowWindow(console, SW_SHOWMAXIMIZED); //Makes sure the console window opens maximized
 
 	Scene s;
-	std::vector<GameObj*> objVec = s.populate(1);
+	std::vector<GameObj*> objVec = s.populate(10);
 	GameObj* currentCharacter = objVec[0];
 
-	rayCasting(s.toWorld());
+	printOnScreen(s, currentCharacter, isFirstPerson);
+
 	while(1)
 	{
-		inputHandling(s, currentCharacter, objVec, stepLength, isFirstPerson);
+		inputHandling(s, currentCharacter, objVec, stepLength, rotationAngle,isFirstPerson);
 	}	
 }

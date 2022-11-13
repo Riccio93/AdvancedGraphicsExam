@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <ctime>
+#include <random>
 
 #define TOLERANCE 1e-5;
 
@@ -12,8 +13,6 @@ namespace mgd
 
 	inline Scalar randomBetween(Scalar min, Scalar max) //RNG
 	{
-		//TODO: Replace with a true random???
-		//std::srand(time(NULL));
 		return min + (std::rand() % 1000) / Scalar(1000) * (max - min);
 	}
 
@@ -23,7 +22,9 @@ namespace mgd
 
 		//Constructors
 		Vector3() : x(0), y(0), z(0) {}
-		Vector3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+		Vector3(Scalar _x, Scalar _y, Scalar _z) : x(_x), y(_y), z(_z) {}
+
+		static Vector3 up() { return Vector3(0, 1, 0); }
 
 		//Operator overloads
 		Vector3 operator + (const Vector3& v) const { return Vector3(x + v.x, y + v.y, z + v.z); }

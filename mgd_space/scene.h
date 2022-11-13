@@ -21,28 +21,42 @@ namespace mgd
 			for(int i=0; i<n; i++)
 			{
 				GameObj* newObj = new GameObj();
-				//newObj.transform.translate = Vector3::random(10) + Vector3(0,0,10);
-				newObj->transform.translate = Vector3(0, 0, 5);
-				//newObj->transform.translate.y = 0;
+				if(i==0)
+					newObj->transform.translate = Vector3(0, 0, 10);
+				else
+				{
+					newObj->transform.translate = Vector3::random(25);
+					newObj->transform.translate.y = 0;
+					newObj->scale(.5f + (std::rand() % 1000) / Scalar(1000) * (5.f - .5f));
+				}
 				obj.push_back(newObj);
 			}
 			return obj;
 		}
 
 		//Makes a vector of spheres in world space
-		std::vector<GameObj*> toWorld() const
+		std::vector<Sphere> toWorld() const
 		{
-			std::vector<GameObj*> res;
-			for(GameObj* g : obj)
+			std::vector<Sphere> res;
+			std::vector<GameObj*>::const_iterator citer;
+			for (citer = obj.cbegin(); citer != obj.cend(); citer++)
 			{
-				//res.push_back(apply(g.transform, g.nose));
-				res.push_back(apply(g->transform, g->body));
+				res.push_back(apply((*citer)->getTransform(), (*citer)->body));
 			}
 			return res;
 		}
 
 		std::vector<Sphere> toView(Transform camera) const
 		{
+			std::vector<Sphere> res;
+			std::vector<GameObj*>::const_iterator citer;
+			for (citer = obj.cbegin(); citer != obj.cend(); citer++)
+			{
+				Sphere current = apply((*citer)->getTransform(), (*citer)->body);
+				res.push_back(apply(camera.inverse(), current));
+			}
+			return res;
+
 			//Trasforma ogni sfera con la sua trasformazione cumulata con l'inversa della camera, per
 			//portarlo in spazio vista.
 			//Ripetere il rendering ad ogni key press (con una readchar), con wasd controllo la camera (a e d la
