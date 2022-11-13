@@ -100,11 +100,11 @@ namespace mgd
 				Versor3 hitNorm;
 				Scalar distMax = 1000.f;
 
-				rayCast(c.primaryRay(x, y), plane, hitPos, hitNorm, distMax); //Floor raycast
 				for(const Sphere &s : sphereVector)
 				{
 					rayCast(c.primaryRay(x, y), s, hitPos, hitNorm, distMax); //Spheres raycast
 				}
+				rayCast(c.primaryRay(x, y), plane, hitPos, hitNorm, distMax); //Floor raycast
 				screenBuffer += lighting(hitNorm);
 			}			
 			screenBuffer += '\n';
